@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Core;
 
 use App\Http\Controllers\Controller;
+use App\Models\Core\Carrinho;
 use Illuminate\Http\Request;
 
 class CarrinhoController extends Controller
@@ -14,7 +15,8 @@ class CarrinhoController extends Controller
      */
     public function index()
     {
-        //
+        $data = Carrinho::all();
+        return response()->json(['data'=> $data]);
     }
 
     /**
@@ -25,7 +27,12 @@ class CarrinhoController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $data = $request->all();//pega todos
+        $data1 = $request->input('nome_produto');//pega o input
+
+        Carrinho::create($data);
+
+        return response()->json(['data'=> $data1]);
     }
 
     /**
@@ -48,7 +55,11 @@ class CarrinhoController extends Controller
      */
     public function update(Request $request, $id)
     {
-        //
+        $dataRequest = $request->all();
+        $data = Carrinho::findOrFail($id);
+        $data -> update($dataRequest);
+
+        return response()->json(["msg"=> "dados atualziados com sucesso","data" => $data]);
     }
 
     /**
@@ -59,6 +70,9 @@ class CarrinhoController extends Controller
      */
     public function destroy($id)
     {
-        //
+        $data = Carrinho::find($id);
+        $data -> delete($data);
+
+        return response()->json(["msg"=> "dados excluído com sucesso","data" => $data]);
     }
 }

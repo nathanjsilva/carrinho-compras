@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\StoresController;
+use App\Http\Controllers\Core\CarrinhoController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -19,4 +19,7 @@ use Illuminate\Support\Facades\Route;
 //     return $request->user();
 // });
 
-Route::get('store', [StoresController::class, 'index']);
+Route::get('carrinho', [CarrinhoController::class, 'index']);
+Route::post('inserir_produto', [CarrinhoController::class, 'store']);
+Route::put('atualizar_produto/{id}', [CarrinhoController::class, 'update']);
+Route::delete('deletar_produto/{id}', [CarrinhoController::class, 'destroy']);
