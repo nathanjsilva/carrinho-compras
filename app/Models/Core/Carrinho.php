@@ -20,4 +20,5 @@ class Carrinho extends Model
         'valor_total_compra',
         'ip_usuario'
     ];
+    
 }

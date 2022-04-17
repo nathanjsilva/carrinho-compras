@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Core;
 use App\Http\Controllers\Controller;
 use App\Models\Core\Carrinho;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class CarrinhoController extends Controller
 {
@@ -27,12 +28,29 @@ class CarrinhoController extends Controller
      */
     public function store(Request $request)
     {
-        $data = $request->all();//pega todos
-        $data1 = $request->input('nome_produto');//pega o input
+        $produto = $this->getProduto($request->input('id_produto'));
+
+        if(!empty($produto->id_produto)) {
+            $qtd_produto  = intval($produto->qtd_produto);
+            $qtd_produto  = $qtd_produto + 1;
+            $valor_total  = $produto->valor_produto * $qtd_produto;
+            $arrayProduto = ["qtd_produto" => $qtd_produto, "valor_total_compra" => $valor_total];
+            $this->atualizar($arrayProduto,$produto->id_produto);
+            return response()->json(["msg"=> "Quantidade do produto atualizado com sucesso"]);
+        }
+        
+        $data  = [
+            "nome_produto"       => $request->input('nome_produto'),
+            "id_produto"         => $request->input('id_produto'),
+            "valor_produto"      => $request->input('valor_produto'),
+            "qtd_produto"        => intval($request->input('qtd_produto')),
+            "valor_total_compra" => $request->input('valor_produto') * intval($request->input('qtd_produto')),
+            "ip_usuario"         => $_SERVER["REMOTE_ADDR"],
+        ];
 
         Carrinho::create($data);
 
-        return response()->json(['data'=> $data1]);
+        return response()->json(['data'=> $data]);
     }
 
     /**
@@ -55,13 +73,32 @@ class CarrinhoController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $dataRequest = $request->all();
         $data = Carrinho::findOrFail($id);
-        $data -> update($dataRequest);
+        $produto = $this->getProduto($id);
 
-        return response()->json(["msg"=> "dados atualziados com sucesso","data" => $data]);
+        $qtd_produto  = intval($produto->qtd_produto) + 1;
+        $valor_total  = $produto->valor_produto * $qtd_produto;
+        $arrayProduto = ["qtd_produto" => $qtd_produto, "valor_total_compra" => $valor_total];
+
+        $data->update($arrayProduto);
+
+        return response()->json(["msg"=> "Quantidade do produto atualizada com sucesso", $data]);
     }
 
+    /**
+     * função para atualizar carrinho.
+     *
+     * @param  array $array
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function atualizar(array $array, $id)
+    {
+        $data = Carrinho::findOrFail($id);
+        $data -> update($array);
+
+        return response()->json(["msg"=> "dados atualizados com sucesso","data" => $data]);
+    }
     /**
      * Remove the specified resource from storage.
      *
@@ -71,8 +108,27 @@ class CarrinhoController extends Controller
     public function destroy($id)
     {
         $data = Carrinho::find($id);
+        $produto = $this->getProduto($id);
+        $qtd_produto = $produto->qtd_produto;
+
+        if($qtd_produto > 1) {
+
+            $qtd_produto  = intval($produto->qtd_produto) - 1;
+            $valor_total  = $produto->valor_produto * $qtd_produto;
+            $arrayProduto = ["qtd_produto" => $qtd_produto, "valor_total_compra" => $valor_total];
+    
+            $data->update($arrayProduto);
+
+            return response()->json(["msg"=> "Quantidade do produto atualizada com sucesso", $data]);
+        }
+
         $data -> delete($data);
 
-        return response()->json(["msg"=> "dados excluído com sucesso","data" => $data]);
+        return response()->json(["msg"=> "Produto excluído com sucesso","data" => $data]);
+    }
+
+    public function getProduto($idProduto){
+        $produto = DB::table('carrinho')->where('id_produto', $idProduto)->first();
+        return $produto;
     }
 }
